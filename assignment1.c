@@ -15,6 +15,7 @@
 
 FILE *gstText;
 FILE *ngstText;
+FILE *transactionsText;
 
 int transactions;
 
@@ -90,6 +91,7 @@ void purchase(void)
 	
 	gstText = fopen("gst.txt", "r");
 	ngstText = fopen("ngst.txt", "r");
+	transactionsText = fopen("transactions.txt", "w");
 
 	itemFound = 0;
 
@@ -123,6 +125,8 @@ void purchase(void)
 			scanf("%d", &quantityInput);
 			if (quantityInput >= 0) {
 				transactions += quantityInput;
+				fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
+
 				printf("\n");
 				printf("Code       Name                     Price      Quantity\n");
 				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
@@ -145,6 +149,7 @@ void purchase(void)
 
 	fclose(gstText);
 	fclose(ngstText);
+	fclose(transactionsText);
 
 	return;
 }
