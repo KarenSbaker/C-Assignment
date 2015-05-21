@@ -78,3 +78,73 @@ int main(void)
 	return 0;
 }
 
+void purchase(void)
+{
+	char itemCodeInput[CODELENGTH];
+	char itemCode[CODELENGTH];
+	char itemName[MAXCHAR];
+	int quantityInput;
+	int quantity;
+	int itemFound;
+	double price;
+	
+	gstText = fopen("gst.txt", "r");
+	ngstText = fopen("ngst.txt", "r");
+
+	itemFound = 0;
+
+	printf("------------------------------------\n");
+	printf("Purchase\n");
+	printf("------------------------------------\n");
+	printf("Enter -1 to cancel transaction\n");
+	printf("Enter c to conclude transaction\n");
+	printf("\n");
+
+	printf("Enter the item code: ");
+	scanf("%s", itemCodeInput);
+	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
+		while(!feof(gstText)) {
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			if (strcmp(itemCodeInput, itemCode) == 0) {
+				itemFound = 1;
+				break;
+			}
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			if (strcmp(itemCodeInput, itemCode) == 0) {
+				itemFound = 1;
+				break;
+			}
+		}
+
+		if (itemFound) {
+			printf("\n");
+			printf("Negative quantities cancel the selected item\n");
+			printf("Enter the quantity: ");
+			scanf("%d", &quantityInput);
+			if (quantityInput >= 0) {
+				transactions += quantityInput;
+				printf("\n");
+				printf("Code       Name                     Price      Quantity\n");
+				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
+				printf("\n");
+				printf("Subtotal: %.2lf\n", price * quantityInput);
+				printf("\n");
+			}
+			else
+				printf("Item canceled\n");
+		}
+		else
+			printf("Invalid item.\n");
+
+		rewind(gstText);
+		rewind(ngstText);
+		itemFound = 0;
+		printf("Enter the item code: ");
+		scanf("%s", itemCodeInput);
+	}
+
+	fclose(gstText);
+	fclose(ngstText);
+
+	return;
+}
