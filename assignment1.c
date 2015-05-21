@@ -17,7 +17,7 @@ FILE *gstText;
 FILE *ngstText;
 FILE *transactionsText;
 
-int transactions;
+int flush;
 
 void purchase(void);
 
@@ -25,7 +25,6 @@ int main(void)
 {
 	int menuInput;
 	int sentinel = 1;
-	int flush;
 
 	// Menu
 		printf("------------------------------------\n");
@@ -84,9 +83,11 @@ void purchase(void)
 	char itemCodeInput[CODELENGTH];
 	char itemCode[CODELENGTH];
 	char itemName[MAXCHAR];
+	char receiptPrompt;
 	int quantityInput;
 	int quantity;
 	int itemFound;
+	int transactions = 0;
 	double price;
 	
 	gstText = fopen("gst.txt", "r");
@@ -120,10 +121,10 @@ void purchase(void)
 
 		if (itemFound) {
 			printf("\n");
-			printf("Negative quantities cancel the selected item\n");
+			printf("Quantities less than 1 cancel the selected item\n");
 			printf("Enter the quantity: ");
 			scanf("%d", &quantityInput);
-			if (quantityInput >= 0) {
+			if (quantityInput > 0) {
 				transactions += quantityInput;
 				fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
 
@@ -146,6 +147,32 @@ void purchase(void)
 		printf("Enter the item code: ");
 		scanf("%s", itemCodeInput);
 	}
+
+	// Receipt
+	if (strcmp(itemCodeInput, "-1") && transactions > 0) {
+		flush = getchar();
+		printf("Print receipt? (y/n): ");
+		for(;;) {
+			receiptPrompt = getchar();
+			if (receiptPrompt == 'y') {
+				printf("Code       Name                     Price      Quantity\n");
+				while(!feof(gstText)) {
+					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
+				}
+				break;
+			}
+			else if (receiptPrompt == 'n') {
+				printf("Transaction concluded\n");
+				break;
+			}
+			else
+				printf("Invalid input, please enter y or n");
+		}
+
+	}
+	else
+		printf("Transaction canceled\n");
 
 	fclose(gstText);
 	fclose(ngstText);
