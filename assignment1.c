@@ -2,8 +2,8 @@
 */
 /* ITS60304– Assignment #1 */
 /* C Programming */
-/* Student Name: (Dante) Yee Xiong  Wan & <your name 2> */
-/* Student ID: 0324206 & <your ID2> */
+/* Student Name: <Wan Yee Xiong> <Karen Sim Tze Mien> */
+/* Student ID: <0324206> <0322562> */
 /*-------------------------------------------------------------------
 */
 
@@ -28,6 +28,8 @@ int flush;
 
 void purchase(void);
 
+void showInventory(void);
+
 int main(void)
 {
 	int menuInput;
@@ -50,31 +52,39 @@ int main(void)
 	// Options
 	while (loopMenu) {
 		printf("Select an option: ");
+		scanf("%d", &menuInput)
 
 		if (menuInput = getchar()) {
 			switch (menuInput) {
 				case '1':
 					purchase();
 					break;
+					
 				case '2':
 					printf("This option allows user to edit items.\n");
 					break;
+					
 				case '3':
 					printf("This option allows user to update items.\n");
 					break;
+					
 				case '4':
 					printf("This option allows user to delete items.\n");
 					break;
+					
 				case '5':
-					printf("stub here\n");
+                    showInventory();
 					break;
+					
 				case '6':
 					printf("stub here\n");
 					break;
+					
 				case '7':
 					printf("Program exiting.\n");
 					loopMenu = NO;
 					break;
+					
 				default:
 					printf("Invalid input. Please enter your selection again.\n");
 					badInput = YES;
@@ -85,6 +95,48 @@ int main(void)
 	}
 			
 	return 0;
+}
+
+void showInventory (void)
+{  
+
+				char itemCode[6];
+				char itemName[20];
+				double itemPrice;
+				int quantity;
+
+				    printf("GST included Items\n");
+				    if ((gstText = fopen("/home/0322562/karen/Assignement1/gst.txt", "r")) == NULL ){
+						puts("File could not be opened");
+					}
+					else {
+						printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+
+						while (!feof(gstText)){
+						printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
+					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+						}
+
+						fclose(gstText);
+					}
+
+					printf("Non-GST included Items\n");
+				    if ((ngstText = fopen("/home/0322562/karen/Assignment1/ngst.txt", "r")) ==NULL ){
+						puts("File could not be opened");
+					}
+					else {
+						printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+
+						while (!feof(ngstText)){
+					    printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
+					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+						}
+
+						fclose(ngstText);
+					}
+
 }
 
 void purchase(void)
