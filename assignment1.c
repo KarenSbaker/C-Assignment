@@ -20,6 +20,8 @@ int transactions;
 
 void purchase(void);
 
+void showInventory(void);
+
 int main(void)
 {
 	int menuInput;
@@ -42,31 +44,39 @@ int main(void)
 	// Options
 	while (sentinel) {
 		printf("Select an option: ");
+		scanf("%d", &menuInput)
 
 		if ((menuInput = getchar()) != '\n') {	// deals with lone '\n' inputs
 			switch (menuInput) {
 				case '1':
 					purchase();
 					break;
+					
 				case '2':
-					printf("stub here\n");
+					printf("This option allows user to edit items.\n");
 					break;
+					
 				case '3':
-					printf("stub here\n");
+					printf("This option allows user to update items.\n");
 					break;
+					
 				case '4':
-					printf("stub here\n");
+					printf("This option allows user to delete items.\n");
 					break;
+					
 				case '5':
-					printf("stub here\n");
+                    showInventory();
 					break;
+					
 				case '6':
 					printf("stub here\n");
 					break;
+					
 				case '7':
 					printf("Program exiting.\n");
 					sentinel = 0;
 					break;
+					
 				default:
 					printf("Invalid input. Please enter your selection again.\n");
 					break;
@@ -77,4 +87,47 @@ int main(void)
 			
 	return 0;
 }
+
+void showInventory (void)
+{  
+
+				char itemCode[6];
+				char itemName[20];
+				double itemPrice;
+				int quantity;
+
+				    printf("GST included Items\n");
+				    if ((gstText = fopen("/home/0322562/karen/Assignement1/gst.txt", "r")) == NULL ){
+						puts("File could not be opened");
+					}
+					else {
+						printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
+					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+
+						while (!feof(gstText)){
+						printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
+					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+						}
+
+						fclose(gstText);
+					}
+
+					printf("Non-GST included Items\n");
+				    if ((ngstText = fopen("/home/0322562/karen/Assignment1/ngst.txt", "r")) ==NULL ){
+						puts("File could not be opened");
+					}
+					else {
+						printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
+					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+
+						while (!feof(ngstText)){
+					    printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
+					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+						}
+
+						fclose(ngstText);
+					}
+
+}
+
 
