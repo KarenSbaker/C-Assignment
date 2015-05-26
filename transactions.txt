@@ -1,0 +1,2 @@
+CN001;Chicken Keel;8.00;6
+AG001;July biscuits;5.35;5
