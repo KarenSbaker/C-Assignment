@@ -22,7 +22,7 @@ FILE *transactionsText;
 
 int gstTransactions;
 int ngstTransactions;
-double gstSales;
+double gstSales;	// gst not included
 double ngstSales;
 int flush;
 
@@ -31,7 +31,8 @@ void purchase(void);
 int main(void)
 {
 	int menuInput;
-	int sentinel = 1;
+	int loopMenu = YES;
+	int badInput = NO;
 
 	// Menu
 		printf("------------------------------------\n");
@@ -47,22 +48,22 @@ int main(void)
 		printf("\n");
 
 	// Options
-	while (sentinel) {
+	while (loopMenu) {
 		printf("Select an option: ");
 
-		if ((menuInput = getchar()) != '\n') {	// deals with lone '\n' inputs
+		if (menuInput = getchar()) {
 			switch (menuInput) {
 				case '1':
 					purchase();
 					break;
 				case '2':
-					printf("stub here\n");
+					printf("This option allows user to edit items.\n");
 					break;
 				case '3':
-					printf("stub here\n");
+					printf("This option allows user to update items.\n");
 					break;
 				case '4':
-					printf("stub here\n");
+					printf("This option allows user to delete items.\n");
 					break;
 				case '5':
 					printf("stub here\n");
@@ -72,10 +73,11 @@ int main(void)
 					break;
 				case '7':
 					printf("Program exiting.\n");
-					sentinel = 0;
+					loopMenu = NO;
 					break;
 				default:
 					printf("Invalid input. Please enter your selection again.\n");
+					badInput = YES;
 					break;
 			}
 			flush = getchar();	// flushes the '\n' after the input away
@@ -152,7 +154,7 @@ void purchase(void)
 				if (isGST) {	// is the item GST taxable?
 					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
 					gstTransactions += quantityInput;
-					gstSales += (subtotal + gstAmount);
+					gstSales += subtotal;
 				}
 				else {
 					printf("Subtotal: %.2lf\n", subtotal);
@@ -208,7 +210,7 @@ void purchase(void)
 					printf("\n");
 				}
 				printf("Total Sales incl GST: %.2lf\n", total);
-				roundedTotal = round(total * 2.0) / 2.0;
+				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
 				printf("Rounding adjusment: %.2lf\n", roundedTotal - total);
 				printf("Total after adj incl GST: %.2lf\n", roundedTotal);
 				fclose(transactionsText);
