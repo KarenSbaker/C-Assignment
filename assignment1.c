@@ -32,9 +32,10 @@ void showInventory(void);
 
 int main(void)
 {
-	int menuInput;
+	int convertedMenuInput;
 	int loopMenu = YES;
 	int badInput = NO;
+	char menuInput[MAXCHAR];
 
 	// Menu
 		printf("------------------------------------\n");
@@ -52,45 +53,43 @@ int main(void)
 	// Options
 	while (loopMenu) {
 		printf("Select an option: ");
-		scanf("%d", &menuInput)
+		scanf("%s", menuInput);
+		convertedMenuInput = atoi(menuInput);
 
-		if (menuInput = getchar()) {
-			switch (menuInput) {
-				case '1':
-					purchase();
-					break;
-					
-				case '2':
-					printf("This option allows user to edit items.\n");
-					break;
-					
-				case '3':
-					printf("This option allows user to update items.\n");
-					break;
-					
-				case '4':
-					printf("This option allows user to delete items.\n");
-					break;
-					
-				case '5':
-                    showInventory();
-					break;
-					
-				case '6':
-					printf("stub here\n");
-					break;
-					
-				case '7':
-					printf("Program exiting.\n");
-					loopMenu = NO;
-					break;
-					
-				default:
-					printf("Invalid input. Please enter your selection again.\n");
-					badInput = YES;
-					break;
-			}
-			flush = getchar();	// flushes the '\n' after the input away
+		switch (convertedMenuInput) {
+			case 1:
+				purchase();
+				break;
+				
+			case 2:
+				printf("This option allows user to edit items.\n");
+				break;
+				
+			case 3:
+				printf("This option allows user to update items.\n");
+				break;
+				
+			case 4:
+				printf("This option allows user to delete items.\n");
+				break;
+				
+			case 5:
+                showInventory();
+				break;
+				
+			case 6:
+				printf("stub here\n");
+				break;
+				
+			case 7:
+				printf("Program exiting.\n");
+				loopMenu = NO;
+				break;
+				
+			default:
+				printf("Invalid input. Please enter your selection again.\n");
+				badInput = YES;
+				break;
 		}
 	}
 			
@@ -106,32 +105,30 @@ void showInventory (void)
 				int quantity;
 
 				    printf("GST included Items\n");
-				    if ((gstText = fopen("/home/0322562/karen/Assignement1/gst.txt", "r")) == NULL ){
+				    if ((gstText = fopen("gst.txt", "r")) == NULL ){
 						puts("File could not be opened");
 					}
 					else {
 						printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
-					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
 
 						while (!feof(gstText)){
-						printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
-					    fscanf( gstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+							fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+							printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
 						}
 
 						fclose(gstText);
 					}
 
 					printf("Non-GST included Items\n");
-				    if ((ngstText = fopen("/home/0322562/karen/Assignment1/ngst.txt", "r")) ==NULL ){
+				    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ){
 						puts("File could not be opened");
 					}
 					else {
 						printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
-					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
 
 						while (!feof(ngstText)){
-					    printf("%s %s %.2lf %d \n", itemCode, itemName, itemPrice, quantity);
-					    fscanf( ngstText, "%s %s %lf %d", itemCode, itemName, &itemPrice, &quantity);
+							fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
+					    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
 						}
 
 						fclose(ngstText);
