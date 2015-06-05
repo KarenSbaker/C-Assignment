@@ -20,15 +20,21 @@ FILE *gstText;
 FILE *ngstText;
 FILE *transactionsText;
 
+int flush;
 int gstTransactions;
 int ngstTransactions;
 double gstSales;	// gst not included
 double ngstSales;
-int flush;
 
 void purchase(void);
-
 void showInventory(void);
+void showTransactions(void);
+
+void printMenu(void);
+void printPurchaseMenu(void);
+void printQuantityPrompt(void);
+void cont(void);
+void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity);
 
 int main(void)
 {
@@ -37,247 +43,432 @@ int main(void)
 	int badInput = NO;
 	char menuInput[MAXCHAR];
 
-	// Menu
-		printf("------------------------------------\n");
-		printf("Grocery Retail\n");
-		printf("------------------------------------\n");
-		printf("1. Purchase items\n");
-		printf("2. Edit items\n");
-		printf("3. Update items\n");
-		printf("4. Delete items\n");
-		printf("5. Show inventory\n");
-		printf("6. Show daily transaction\n");
-		printf("7. Exit\n");
-		printf("\n");
+	system("clear");
 
-	// Options
+	// Menu
 	while (loopMenu) {
+		printMenu();
+
 		printf("Select an option: ");
-		scanf("%s", menuInput);
+		fgets(menuInput, MAXCHAR-1, stdin);
+
 		convertedMenuInput = atoi(menuInput);
+
+		system("clear");
 
 		switch (convertedMenuInput) {
 			case 1:
 				purchase();
+				flush = getchar();
+				cont();
 				break;
 				
 			case 2:
-				printf("This option allows user to edit items.\n");
+				puts("This option allows user to edit items.");
+				cont();
 				break;
 				
 			case 3:
-				printf("This option allows user to update items.\n");
+				puts("This option allows user to update items.");
+				cont();
 				break;
 				
 			case 4:
-				printf("This option allows user to delete items.\n");
+				puts("This option allows user to delete items.");
+				cont();
 				break;
 				
 			case 5:
-                showInventory();
+				showInventory();
+				cont();
 				break;
 				
 			case 6:
-				printf("stub here\n");
+				showTransactions();
+				cont();
 				break;
 				
 			case 7:
-				printf("Program exiting.\n");
 				loopMenu = NO;
 				break;
 				
 			default:
-				printf("Invalid input. Please enter your selection again.\n");
 				badInput = YES;
 				break;
 		}
-	}
+		system("clear");
+
+		if (badInput) {
+			puts("Invalid input. Please enter your selection again.");
+			badInput = NO;
+		}
+	}   //end of Menu
 			
 	return 0;
-}
-
-void showInventory (void)
-{  
-
-				char itemCode[6];
-				char itemName[20];
-				double itemPrice;
-				int quantity;
-
-				    printf("GST included Items\n");
-				    if ((gstText = fopen("gst.txt", "r")) == NULL ){
-						puts("File could not be opened");
-					}
-					else {
-						printf("%s \t %s \t %s \t %s \n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-						while (!feof(gstText)){
-							fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-							printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-						}
-
-						fclose(gstText);
-					}
-
-					printf("Non-GST included Items\n");
-				    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ){
-						puts("File could not be opened");
-					}
-					else {
-						printf("%s \t %s \t %s \t %s\n", "Item Code", "Item Name", "Item Price", "Quantity");
-
-						while (!feof(ngstText)){
-							fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &itemPrice, &quantity);
-					    	printf("%s \t %s \t %.2lf \t %d \n", itemCode, itemName, itemPrice, quantity);
-						}
-
-						fclose(ngstText);
-					}
-
-}
+} //end of main
 
 void purchase(void)
 {
 	char itemCodeInput[CODELENGTH];
 	char itemCode[CODELENGTH];
 	char itemName[MAXCHAR];
-	char receiptPrompt;
+	char receiptPrompt[MAXCHAR];
 	int quantityInput;
 	int quantity;
 	int itemFound;
 	int transactions = 0;
 	int isGST;
+	int badInput;
+	int cancelItem;
 	double price;
 	double subtotal;
 	double gstAmount;
 	double total;
-	double roundedTotal;
 	
-	gstText = fopen("gst.txt", "r");
-	ngstText = fopen("ngst.txt", "r");
+	// open text files
+	if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	else if ((ngstText = fopen("ngst.txt", "r")) == NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+		return;
+	}
+	
+	// overwrites transactions.txt
 	transactionsText = fopen("transactions.txt", "w");
+	fclose(transactionsText); 
 
 	itemFound = NO;
 
-	printf("------------------------------------\n");
-	printf("Purchase\n");
-	printf("------------------------------------\n");
-	printf("Enter -1 to cancel transaction\n");
-	printf("Enter c to conclude transaction\n");
-	printf("\n");
-
+	printPurchaseMenu();
 	printf("Enter the item code: ");
 	scanf("%s", itemCodeInput);
+	
+	// Transactions
 	while(strcmp(itemCodeInput, "-1") && strcmp(itemCodeInput, "c")) {
-		while(!feof(gstText)) {
+		do { // check if item code matches in gst.txt
 			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
 			if (strcmp(itemCodeInput, itemCode) == 0) {
 				itemFound = YES;
 				isGST = YES;
 				break;
 			}
-			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-			if (strcmp(itemCodeInput, itemCode) == 0) {
-				itemFound = YES;
-				isGST = NO;
-				break;
-			}
-		}
+		} while(!feof(gstText));
 
-		if (itemFound) {
-			printf("\n");
-			printf("Quantities less than 1 will cancel the selected item\n");
+		if (itemFound == NO) {
+			do { // check if item code matches in ngst.txt
+				fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+				if (strcmp(itemCodeInput, itemCode) == 0) {
+					itemFound = YES;
+					isGST = NO;
+					break;
+				}
+			} while(!feof(ngstText));
+		}		
+
+		// If item code matches
+		if (itemFound == YES) {
+			system("clear");
+
+			printQuantityPrompt();
+			puts("Code       Name                     Price      Stock");
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			puts("");
 			printf("Enter the quantity: ");
-			scanf("%d", &quantityInput);
-			if (quantityInput > 0) {
 
-				subtotal = price * quantityInput;
-				gstAmount = subtotal * 0.06;
-				// Write to file
-				fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
-
-				printf("\n");
-				printf("Code       Name                     Price      Quantity\n");
-				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
-				printf("\n");
-				if (isGST) {	// is the item GST taxable?
-					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
-					gstTransactions += quantityInput;
-					gstSales += subtotal;
+			for(;;) {
+				
+				// Invalid input
+				if (scanf("%d", &quantityInput) != 1) { // Quantity prompt
+					system("clear");
+					puts("Invalid input, please enter a number");
 				}
+
+				// Valid input
+				else if (quantityInput > 0 && quantityInput <= quantity) {
+
+					subtotal = price * quantityInput;
+					gstAmount = subtotal * 0.06;
+
+					// Write to file
+					transactionsText = fopen("transactions.txt", "a");
+					fprintf(transactionsText, "%s;%s;%.2lf;%d\n", itemCode, itemName, price, quantityInput);
+					// end of Write to file 
+					
+					puts("");
+					puts("Code       Name                     Price      Quantity");
+					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
+					puts("");
+					if (isGST) {	// is the item GST taxable?
+						printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
+						gstTransactions += quantityInput;
+						gstSales += subtotal;
+						total += (subtotal + gstAmount);
+					}
+					else {
+						printf("Subtotal: %.2lf\n", subtotal);
+						ngstTransactions += quantityInput;
+						ngstSales += subtotal;
+						total += subtotal;
+					}
+
+					fclose(transactionsText);
+
+					flush = getchar();
+					cont();
+					break;
+				}
+
+				// Not enough stock
+				else if (quantityInput > quantity) {
+					system("clear");
+					printf("Amount exceeded stock, please enter a number equal or less than %d\n", quantity);
+				}
+				
 				else {
-					printf("Subtotal: %.2lf\n", subtotal);
-					ngstTransactions += quantityInput;
-					ngstSales += subtotal;
+					cancelItem = YES;
+					break;
 				}
-				printf("\n");
+
+				flush = getchar();
+
+				printQuantityPrompt();
+				puts("Code       Name                     Price      Stock");
+				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+				puts("");
+				printf("Enter the quantity: ");
 			}
-			else
-				printf("Item canceled\n");
-		}
+		} // end of 'If item code matches'
 		else
-			printf("Invalid item.\n");
+			badInput = YES;
 
 		rewind(gstText);
 		rewind(ngstText);
 		itemFound = NO;
-		printf("Enter the item code: ");
-		scanf("%s", itemCodeInput);
-	}
 
-	fclose(transactionsText);
+		system("clear");
+
+		if (cancelItem == YES) {
+			puts("Item canceled");
+			cancelItem = NO;
+		}
+		else if (badInput == YES) {
+			puts("Invalid item.");
+			badInput = NO;
+		}
+		
+		printPurchaseMenu();
+
+		puts("Cart");
+		puts("=======");
+		puts("Code       Name                     Price      Quantity");
+
+		// Cart
+		transactionsText = fopen("transactions.txt", "r");
+		
+		fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while(!feof(transactionsText)) {	
+			subtotal = price * quantity;
+			gstAmount = subtotal * 0.06;
+
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		}
+		fclose(transactionsText); 
+		puts("");
+		printf("Total: %.2lf", total);
+		puts(""); // End of Cart
+
+		printf("\nEnter the item code: ");
+		scanf("%s", itemCodeInput);
+	} //end of Transactions
 
 	// Receipt
+	char yesReceipt = 'y';
+	char noReceipt =  'n';
 	if (strcmp(itemCodeInput, "-1") && subtotal > 0) {
+		printf("Print receipt? (%c/%c): ", yesReceipt, noReceipt);
 		flush = getchar();
-		printf("Print receipt? (y/n): ");
-		for(;;) {
-			receiptPrompt = getchar();
-			flush = getchar();
-			if (receiptPrompt == 'y') {
-
-				transactionsText = fopen("transactions.txt", "r");
-
-				printf("======== Receipt ========\n");
-				printf("Code       Name                     Price      Quantity\n");
-				printf("\n");
-				while(!feof(transactionsText)) {
-					fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
-					
-					subtotal = price * quantityInput;
-					gstAmount = subtotal * 0.06;
-
-					printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantityInput);
-					if (itemCode[1] == 'G') {
-						total += (subtotal + gstAmount);
-						printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
-					}
-					else {
-						total += subtotal;
-						printf("Subtotal: %.2lf\n", subtotal);
-					}
-					printf("\n");
-				}
-				printf("Total Sales incl GST: %.2lf\n", total);
-				roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
-				printf("Rounding adjusment: %.2lf\n", roundedTotal - total);
-				printf("Total after adj incl GST: %.2lf\n", roundedTotal);
-				fclose(transactionsText);
-				break;
-			}
-			else if (receiptPrompt == 'n') {
-				printf("Transaction concluded\n");
-				break;
-			}
-			else
-				printf("Invalid input, please enter y or n: ");
-		}
+		printReceipt(yesReceipt, noReceipt, itemCode, itemName, price, quantity);
 	}
 	else
-		printf("Transaction canceled\n");
+		puts("Transaction canceled"); // End of Receipt
 
 	fclose(gstText);
 	fclose(ngstText);
 
 	return;
-}
+} //end of purchase function
+
+void showInventory(void)
+{  
+	char itemCode[6];
+	char itemName[20];
+	double price;
+	int quantity;
+
+    puts("| GST included Items |");
+    if ((gstText = fopen("gst.txt", "r")) == NULL ) {
+		puts("The file 'gst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		puts("Code       Name                     Price      Quantity\n");
+
+		fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while (!feof(gstText)){
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(gstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		}
+
+		fclose(gstText);
+	}
+
+	puts("");
+	puts("| Non-GST included Items |");
+    if ((ngstText = fopen("ngst.txt", "r")) ==NULL ) {
+		puts("The file 'ngst.txt' could not be opened");
+		puts("Please contact your system administrator.");
+	}
+	else {
+		puts("Code       Name                     Price      Quantity\n");
+
+		fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		while (!feof(ngstText)){
+			printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+			fscanf(ngstText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+		}
+
+		fclose(ngstText);
+	}
+	return;
+} //end of showInventory function
+
+void showTransactions(void)
+{
+	puts("------------------------------------");
+	puts("Transaction Details");
+	puts("------------------------------------");
+	puts("");
+	printf("Today's transactions:    %d\n", gstTransactions + ngstTransactions);
+	printf("Sales with GST:          %.2lf\n", gstSales * 1.06);
+	printf("Sales without GST:       %.2lf\n", ngstSales);
+	printf("Total sales:             %.2lf\n", gstSales*1.06 + ngstSales);
+	printf("GST collected:           %.2lf\n", gstSales * 0.06);
+
+	return;
+} //end of showTransactions function
+
+void printMenu(void)
+{
+	puts("------------------------------------");
+	puts("Grocery Retail");
+	puts("------------------------------------");
+	puts("1. Purchase items");
+	puts("2. Edit items");
+	puts("3. Update items");
+	puts("4. Delete items");
+	puts("5. Show inventory");
+	puts("6. Show daily transaction");
+	puts("7. Exit");
+	puts("");
+	puts("------------------------------------");
+	puts("");
+
+	return;
+} //end of printMenu function
+
+void printPurchaseMenu(void)
+{
+	puts("------------------------------------");
+	puts("Purchase");
+	puts("------------------------------------");
+	puts("Enter -1 to cancel transaction");
+	puts("Enter c to conclude transaction");
+	puts("");
+
+	return;
+} //end of printPurchaseMenu function
+
+void printQuantityPrompt(void)
+{
+	puts("------------------------------------");
+	puts("Purchase");
+	puts("------------------------------------");
+	puts("Quantities less than 1 will cancel the selected item");
+	puts("");
+
+	return;
+} //end of printQuantityPrompt function
+
+void cont(void)
+{
+	int c;
+
+	puts("");
+	puts("Press enter to continue");
+	while ((c = getchar()) != '\n');
+
+	return;
+} //end of cont function
+
+void printReceipt(char yes, char no, char itemCode[CODELENGTH], char itemName[MAXCHAR], double price, int quantity)
+{
+	int c; // char
+	double gstAmount;
+	double subtotal;
+	double total;
+	double roundedTotal;
+
+	system("clear");
+
+	for(;;) {
+		c = getchar(); // get yes or no
+		if (c == yes) {
+
+			transactionsText = fopen("transactions.txt", "r");
+
+			system("clear");
+
+			puts("======== Receipt ========");
+			puts("Code       Name                     Price      Quantity");
+			puts("");
+
+			fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			while(!feof(transactionsText)) {	
+				subtotal = price * quantity;
+				gstAmount = subtotal * 0.06;
+
+				printf("%-10s %-24s %-10.2lf %-10d\n", itemCode, itemName, price, quantity);
+				if (itemCode[1] == 'G') {
+					total += (subtotal + gstAmount);
+					printf("Subtotal: %.2lf (%.2lf + %.2lf GST)\n", subtotal + gstAmount, subtotal, gstAmount);
+				}
+				else {
+					total += subtotal;
+					printf("Subtotal: %.2lf\n", subtotal);
+				}
+				puts("");
+
+				fscanf(transactionsText, " %9[^;];%25[^;];%lf;%d", itemCode, itemName, &price, &quantity);
+			}
+			printf("Total Sales incl GST: %.2lf\n", total);
+			roundedTotal = round(total * 20.0) / 20.0; // rounds prices to 0.05
+			printf("Rounding adjusment: %.2lf\n", roundedTotal - total);
+			printf("Total after adj incl GST: %.2lf\n", roundedTotal);
+			fclose(transactionsText);
+			break;
+		}
+		else if (c == no) {
+			puts("Transaction concluded");
+			break;
+		}
+		else
+			if (c != '\n')
+				flush = getchar();
+			printf("Invalid input, please enter y or n: ");
+	}
+} //end of printReceipt function
